@@ -944,7 +944,8 @@ set subtype(v){
 // exemple, il faut tout remettre
 get content(){ return this._content || (this._content = this.data.content)}
 set content(v){
-  v = v.replace(/\r?\n/g,'__RET__')
+  // Certaines marques (cercle) n'ont pas de contenu
+  v = (v || '').replace(/\r?\n/g,'__RET__')
   this._content = v
   this.data.content = v
   this.contentSpan && (this.contentSpan.innerHTML = this.formated_content )
