@@ -26,11 +26,22 @@ class Analyse {
     this._modified = v
     if (v) {
       UI.allumeRedLight()
+      this.programAutosave()
     } else {
       UI.eteinsRedLight()
     }
   }
   setModified(){this.modified = true}
+
+  // Sauvegarde automatique, quelques secondes après la dernière
+  // modification, si la préférence est activée.
+  programAutosave(){
+    clearTimeout(this.autosaveTimer)
+    if ( !pref('autosave') ) return
+    this.autosaveTimer = setTimeout(() => {
+      this.modified && Analyse.current === this && AnalyseSaver.save()
+    }, 3000)
+  }
   unsetModified(){this.modified = false}
 
 

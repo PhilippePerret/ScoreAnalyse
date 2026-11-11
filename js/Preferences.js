@@ -26,7 +26,7 @@ setValuesSaved(savedData){
     const dprop = this.data[prop]
     const value = (function(v, type){
       switch(type){
-      case 'boolean': return v == 'true';
+      case 'boolean': return v === true || v == 'true';
       case 'number' : return Number(v);
       default: return v
       }
@@ -41,7 +41,8 @@ setValuesSaved(savedData){
  */
 get(key){
   // console.debug("pref %s = %s (%s) in ", key, this.data[key].value, typeof this.data[key].value, this.data)
-  return this.data[key].value || this.data[key].default
+  const value = this.data[key].value
+  return (undefined === value || null === value || '' === value) ? this.data[key].default : value
 }
 set(key,value){
   this.data[key].value = value
