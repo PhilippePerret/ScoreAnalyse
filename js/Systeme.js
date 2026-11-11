@@ -437,7 +437,8 @@ class Systeme extends AObjet {
   }
 
   onMove(e){
-    if ( !this.moving ) return stopEvent(e)
+    // Ne pas bloquer la propagation (resize des marques)
+    if ( !this.moving ) return
     this.obj.style.top = px(e.clientY - this.rectTop)
   }
 
