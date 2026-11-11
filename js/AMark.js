@@ -218,12 +218,7 @@ setValue(newvalue){
     }
   }
 
-  /**
-   * Petit "+" visible à l'édition pour allonger la cadence
-   */
-  if ( this.isCadence ) {
-    this.signePlusCad || this.buildSignePlusCadence()
-  }
+  this.isCadence && this.buildPoigneeCadence()
 
   Analyse.setModified()
 
@@ -439,7 +434,7 @@ build(){
   // Ligne supplémentaire et bouton "+"
   this.hasVerticalLine && this.buildVerticalLine()
   this.prolong    && this.buildLigneProlongation()
-  this.isCadence  && this.buildSignePlusCadence()
+  this.isCadence  && this.buildPoigneeCadence()
   
   // Position et taille de la marque
   this.data.width   && this.applyWidth(this.width)
@@ -536,8 +531,6 @@ get is2dimResizable(){
   // temps (comme les images)
   return this._is2dimresize || (this._is2dimresize = (['img'].includes(this.type)))
 }
-
-get hasSigneMoinsCadence(){return this.signeMoinsCad }
 
 // @return true si le type de marque est ajustable
 get isTypeAjustable(){
@@ -811,122 +804,28 @@ get verticalLine(){
 }
 
 /**
- * Construction du bouton pour réduire la cadence
- * */
-buildSigneMoinsCadence(){
-  this.signeMoinsCad = DCreate('BUTTON', {class:'moins_sign', text:'➖'})
-  this.obj.appendChild(this.signeMoinsCad)
-  listen(this.signeMoinsCad,'click',this.onClickSigneMoinsCadence.bind(this))
-}
-destroySigneMoinsCadence(){
-  unlisten(this.signeMoinsCad,'click',this.onClickSigneMoinsCadence.bind(this))
-  this.signeMoinsCad.remove()
-  this.signeMoinsCad = null
-  delete this.signeMoinsCad
-}
-
-
-/**
- * TRAITEMENT SIGNE PLUS DE CADENCE
- * 
+ * Allongement de la cadence vers la gauche (poignée sur le bord
+ * gauche, comme pour les lignes de prolongation à droite)
  */
-get hasSignePlusCadence(){return this.signePlusCad}
-buildSignePlusCadence(){
-  this.signePlusCad = DCreate('BUTTON', {class:'plus_sign', text:'➕'})
-  this.obj.appendChild(this.signePlusCad)
-  listen(this.signePlusCad,'click',this.onClickSignePlusCadence.bind(this))
-}
-destroySignePlusCadence(){
-  unlisten(this.signePlusCad,'click',this.onClickSignePlusCadence.bind(this))
-  this.signePlusCad.remove()
-  this.signePlusCad = null
-  delete this.signePlusCad
-}
-
-/**
- * Quand on clique le signe "+" se trouvant dans une cadence,
- * on l'aggrandit jusqu'à l'accord précédent
- * 
- * Qu'est-ce qu'est un accord précédent ? C'est un objet qui est
- * avant (x <) et qui se trouve presque sur le même y (à 10 px
- * près)
- * 
- */
-onClickSignePlusCadence(e){
-
-  var previousMark = null
-  var prevCandidats = []
-  
-  for(var aobj of AObjet.items) {
-    // console.log("Candidat pour la cadence : ", aobj)
-    
-    if ( aobj.isSysteme ) {
-      // console.log("C'est un système, je le passe")
-      continue
-    }
-    if (aobj.id == this.id){
-      // console.log("C'est cet objet, je passe")
-      continue
-    }
-    // TODO : en fait, il faudrait partir du "vrai" left (mais
-    // c'est peut-être déjà le vrai left qui est utilisé)
-    if (aobj.left > this.left){
-      // console.log("Marque trop à gauche, je la passe", aobj)
-      continue
-    }
-    if (aobj.top < this.top - 15){
-      // console.log("Marque trop haute, je la passe", aobj)
-      continue
-    }
-    if (aobj.top > this.top + 15){
-      // console.log("Marque trop basse, je la passe", aobj)
-    }
-    prevCandidats.push(aobj)
-  }
-  if ( prevCandidats.length ) {
-    if ( prevCandidats.length == 1 ) {
-      previousMark = prevCandidats[0]
-    } else {
-      // On prend le candidat le plus proche de la cadence
-      previousMark = prevCandidats.pop()
-      prevCandidats.forEach(aobj => {
-        if ( aobj.left > previousMark.left ) previousMark = aobj
-      })
-    }
-    // console.log("Marque précédente trouvée : ", previousMark)
-    const newLeft = previousMark.left - 20
-    var diff = this.left - newLeft
-    this.left   = newLeft
-    this.width  = diff + this.obj.offsetWidth
-    this.obj.style.width = px(this.width)
-
-    this.hasSigneMoinsCadence || this.buildSigneMoinsCadence()
-
-  } else {
-    erreur("Impossible de trouver une marque d'accord avant.<br/>Je ne peux pas rallonger la cadence.")
-  }
-  return stopEvent(e)
-}
-
-
-/**
- * Quand on clique sur le bouton "-" se trouvant dans une cadence
- * pour la raccoucir d'un accord.
- * 
- */
-onClickSigneMoinsCadence(e){
-
-  //
-  // Pour simplifier, on supprime tout, donc on redonne à 
-  // cet objet sa taille initial
-  // Il faut aussi supprimer le bouton
-  var newWidth = 130 // la largeur normale
-  var curWidth = this.obj.offsetWidth
-  var newLeft = this.left + (curWidth - newWidth)
-  this.left = newLeft
-  this.obj.style.width = px(newWidth)
-  this.destroySigneMoinsCadence()
-  return stopEvent(e)
+buildPoigneeCadence(){
+  const my = this
+  if ( my.hasPoigneeCadence ) return
+  my.hasPoigneeCadence = true
+  $(my.obj).resizable({
+      handles: 'w'
+    , start: function(e, ui){
+        this.rightIni = my.left + my.width
+        // Largeur minimale = celle du contenu, pour que la marque
+        // ne se déplace jamais
+        $(my.obj).resizable('option', 'minWidth', my.contentSpan.offsetWidth)
+      }
+    , stop: function(e, ui){
+        my.left  = ui.position.left
+        my.width = this.rightIni - my.left
+        my.setLeft(my.left)
+        my.setWidth(my.width)
+      }
+  })
 }
 
 /**

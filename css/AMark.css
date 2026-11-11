@@ -186,7 +186,6 @@ div.amark.cad {
   border-style: solid;
   border-color: #333;
   text-align: right;
-  min-width: 130px;
   width: 130px;
   overflow: unset; /* il faut montrer ce qui dépasse */
   z-index: 1;
@@ -202,15 +201,6 @@ div.amark.cad span.content {
   margin-top: 12px;
 }
 
-div.amark.cad button.plus_sign,
-div.amark.cad button.moins_sign {
-  float: left;
-  margin-top: 27px;
-}
-div.amark.cad:not(.selected) button.plus_sign,
-div.amark.cad:not(.selected) button.moins_sign {
-  display: none;
-}
 /* Pour le nom de la cadence 
 
   Mais je l'appelle 'mtype' pour "marque type" dans le cas où
