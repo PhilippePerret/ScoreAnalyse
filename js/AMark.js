@@ -573,6 +573,7 @@ observe(){
   } else if ( this.isVresizable && this.isHresizable ) {
     $(this.obj).resizable({
         handles: 'e,s'
+      , start: function(e, ui){ my.memoriseTailleAvantResize() }
       , stop: function(e, ui){
           const wDiff = my.getWidth.call(my) - my.width
           const hDiff = my.getHeight.call(my) - my.height          
@@ -586,6 +587,7 @@ observe(){
   } else if ( this.isHresizable ) {
     $(this.obj).resizable({
       handles:'e'
+    , start: function(e, ui){ my.memoriseTailleAvantResize(/* width only */ true) }
     , stop: function(e, ui){
         const wDiff = my.getWidth.call(my) - my.width
         AObjet.applyToSelection({me:my, dWidth: wDiff})
@@ -690,6 +692,16 @@ observe(){
         // console.log("<- stop")
       }
   })
+}
+
+/**
+ * Sans largeur/hauteur enregistrée, my.width/my.height renverraient
+ * la taille APRÈS redimensionnement (différence nulle, rien n'est
+ * enregistré). On fixe donc la taille de départ.
+ */
+memoriseTailleAvantResize(widthOnly){
+  this.data.width  || (this.data.width  = this.getWidth())
+  widthOnly || this.data.height || (this.data.height = this.getHeight())
 }
 
 onClick(e){
