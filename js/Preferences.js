@@ -68,6 +68,9 @@ set(key,value){
 //   this.set(key, !this.get(key))
 // }
 
+onChange_lock_systems(){
+  Systeme.toggleLock(null, this.getValueOf('lock_systems'))
+}
 onChange_thiness_cellule_line(){
   AMark.bSnap = this.getValueOf('thiness_cellule_line')
 }
