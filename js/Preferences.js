@@ -220,6 +220,13 @@ prepareOnChangeMethods(){
       methode = (function(key, obj){this.saveData(key, obj.checked)}).bind(my, key, obj)
       break
     case 'inputtext':
+      // Enregistrement (et application des styles) à chaque frappe
+      methode = (function(key, obj){
+        this.saveData(key, obj.value)
+        this.data[key].selector && this.updateStylesInHead()
+      }).bind(my, key, obj)
+      listen(obj,'input', methode)
+      return
     case 'select':
       methode = (function(key, obj){this.saveData(key, obj.value)}).bind(my, key, obj)
       break
