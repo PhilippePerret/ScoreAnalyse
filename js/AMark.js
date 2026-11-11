@@ -620,26 +620,29 @@ observe(){
   // Draggable
   $(this.obj).draggable({
       rien:function(){}
+      // Avec ALT, c'est une copie qu'on déplace (duplication),
+      // l'original reste en place.
+    , helper:function(e){
+        if ( !e.altKey ) return this
+        const copie = this.cloneNode(true)
+        copie.removeAttribute('id')
+        copie.style.cursor = 'copy'
+        return copie
+      }
     , drag:function(e,ui){
         // if ( e.shiftKey ){ ui.position.top = my.top }
-        if ( this.forDuplication && !e.altKey ){
-          // <= on a lâché la touche alt
-          this.forDuplication = false
-          my.obj.style.cursor = null
-        } else {
-          if ( my.isGrouped && e.shiftKey) {
-            /*
-            |  Pour voir les associés (groupe) se déplacer en même
-            |  temps.
-            */
-            this.movedGrp || (this.movedGrp = my.grp.map(tid => {return AObjet.get(tid)}))
-            var diffTop   = this.debTop - ui.offset.top
-            var diffLeft  = this.debLeft - ui.offset.left
-            this.movedGrp.forEach(tag => {
-              tag.obj.style.top   = px(tag.top - diffTop)
-              tag.obj.style.left  = px(tag.left - diffLeft)
-            })
-          }
+        if ( my.isGrouped && e.shiftKey) {
+          /*
+          |  Pour voir les associés (groupe) se déplacer en même
+          |  temps.
+          */
+          this.movedGrp || (this.movedGrp = my.grp.map(tid => {return AObjet.get(tid)}))
+          var diffTop   = this.debTop - ui.offset.top
+          var diffLeft  = this.debLeft - ui.offset.left
+          this.movedGrp.forEach(tag => {
+            tag.obj.style.top   = px(tag.top - diffTop)
+            tag.obj.style.left  = px(tag.left - diffLeft)
+          })
         }
       }
     , start:function(e,ui){
@@ -652,14 +655,8 @@ observe(){
         this.movedGrp = undefined // pour les associés
         this.debTop  = 0 + parseInt(ui.position.top, 10)
         this.debLeft = 0 + parseInt(ui.position.left,10)
-        if ( e.altKey ) {
-          this.forDuplication = true
-          this.initData = Object.assign({}, my.data)
-          my.obj.style.cursor = 'copy'
-        } else {
-          this.forDuplication = false
-          my.obj.style.cursor = null
-        }
+        this.forDuplication = ui.helper[0] !== my.obj
+        this.initData = Object.assign({}, my.data)
       }
     , stop:function(e,ui){
         // console.log("Fin : ", {
@@ -672,11 +669,8 @@ observe(){
         const diffTop   = this.debTop - ui.position.top
         const diffLeft  = this.debLeft - ui.position.left
         // console.log("diffLeft = %i / diffTop = %i", diffLeft, diffTop)
-        my.obj.style.cursor = null
         let saufId = null
-        if ( e.altKey && this.forDuplication ) {
-          // Remettre l'original en place
-          my.ajustePosition(this.initData.left, this.initData.top)
+        if ( this.forDuplication ) {
           // Créer la nouvelle marque
           var newMark = AMark.createNew(e, this.initData)
           newMark.ajustePosition(ui.position.left, ui.position.top)
@@ -695,6 +689,11 @@ observe(){
           ao.left = ao.left - diffLeft
           ao.top  = ao.top - diffTop
         })
+        // La copie devient la sélection
+        if ( this.forDuplication ) {
+          AObjet.deselectAll()
+          AObjet.addToSelection(newMark)
+        }
         // console.log("<- stop")
       }
   })
